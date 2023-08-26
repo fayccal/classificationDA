@@ -5,6 +5,7 @@ import math
 import argparse
 import numpy as np
 import os
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 from DSAN import DSAN
 import data_loader
@@ -45,17 +46,25 @@ def train_epoch(epoch, model, dataloaders, optimizer):
 # retourne les dataloader utilisé
 def load_data(root_path, src, tar, batch_size, ctransfo):
     kwargs = {'num_workers': 1, 'pin_memory': True}
-    loader_src = data_loader.load_training(root_path, src, batch_size, ctransfo, kwargs)
-    loader_tar = data_loader.load_training(root_path, tar, batch_size, ctransfo, kwargs)
-    loader_test = data_loader.load_testing(
-        root_path, tar, batch_size, kwargs)
+    if ctransfo:
+        loader_src = data_loader.load_training(root_path, src, batch_size, ctransfo, kwargs)
+        loader_tar = data_loader.load_training(root_path, tar+"/train", batch_size, ctransfo, kwargs)
+        loader_test = data_loader.load_testing(root_path, tar+"/test", batch_size, kwargs)
+    else:
+        loader_src = data_loader.load_training(root_path, src, batch_size, ctransfo, kwargs)
+        loader_tar = data_loader.load_training(root_path, tar, batch_size, ctransfo, kwargs)
+        loader_test = data_loader.load_testing(root_path, tar, batch_size, kwargs)
+
     return loader_src, loader_tar, loader_test
 
-def test(model, dataloader):
+
+def test(model, dataloader, ctransfo):
     # mode évaluation
     model.eval()
     test_loss = 0
     correct = 0
+    y_true = []
+    y_pred = []
     with torch.no_grad():
         for data, target in dataloader:
             data, target = data.cuda(), target.cuda()
@@ -65,7 +74,17 @@ def test(model, dataloader):
             pred = pred.data.max(1)[1]
             # bonne prédiction pour calculer l'accuracy
             correct += pred.eq(target.data.view_as(pred)).cpu().sum()
+            y_true.extend(target.cpu().numpy())
+            y_pred.extend(pred.cpu().numpy())
 
+        test_loss /= len(dataloader)
+        precision = precision_score(y_true, y_pred, average='weighted')
+        recall = recall_score(y_true, y_pred, average='weighted')
+        f1 = f1_score(y_true, y_pred, average='weighted')
+        if ctransfo :
+            print("Precision:", precision)
+            print("Recall:", recall)
+            print("F1 Score:", f1)
         test_loss /= len(dataloader)
         print(
             f'Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(dataloader.dataset)} ({100. * correct / len(dataloader.dataset):.2f}%)')
@@ -136,7 +155,7 @@ if __name__ == '__main__':
             param_group['lr'] = args.lr[index] / math.pow((1 + 10 * (epoch - 1) / args.nepoch), 0.75)
 
         train_epoch(epoch, model, dataloaders, optimizer)
-        t_correct = test(model, dataloaders[-1])
+        t_correct = test(model, dataloaders[-1], args.ctransfo)
         if t_correct > correct:
             correct = t_correct
             stop = 0

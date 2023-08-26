@@ -9,7 +9,7 @@ Voici les liens de téléchargement vers les datasets, qui doivent etre déposé
 - office31: https://drive.google.com/file/d/0B4IapRTv9pJ1WGZVd1VDMmhwdlE/view?resourcekey=0-gNMHVtZfRAyO_t2_WrOunA
 - officehome: https://drive.google.com/file/d/0B81rNlvomiwed0V1YUxQdC1uOTg/view?resourcekey=0-2SNWq0CDAuWOBRRBL7ZZsw
 - CXR data: https://drive.google.com/file/d/1aPTLskr0ROrP47INrOOSlnUdQTCHSUau/view?usp=drive_link
-
+- seg model: https://drive.google.com/file/d/1e-EJn-f4d7-2Vnf6jg3bC4LpZqpkbnwZ/view?usp=sharing
 ## Utilisation
 
 Tout d'abord il est nécessaire de télécharger les poids pré-entrainé sur imagenet ici et déposé ce fichier dans le répertoire courant:
